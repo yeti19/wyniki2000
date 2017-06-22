@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>Wyniki wyborów 2000</title>
+  <link rel="stylesheet" type="text/css" href="{{ static('main.css') }}">
+  <link rel="stylesheet" type="text/css" media="screen,projection" href="{{ static('pl-mapa-500px.css') }}" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="{{ static('main.js') }}"></script>
+  <script src="{{ static('users.js') }}"></script>
+  <script src="{{ static('edit.js') }}"></script>
+  <script src="{{ static('pl-mapa.js') }}"></script> 
+</head>
+<body>
+<div id="register_form_shadow">
+</div>
+
+<div id="content">
+  <div id="register_form">
+    <form id="register" onsubmit="return false;">
+      <button style="float: right; width: 27px; height: 27px;" onclick="$('#register_form_shadow').hide();$('#register_form').hide();">X</button>
+	  <h2>Rejestracja</h2>
+      <div>Login: <input id="username" maxlength="30" name="username" type="text"></div>
+      <div>Hasło: <input id="password" name="password" type="password"></div>
+      <div><button onclick="register()">Zarejestruj się!</button></div>
+    </form>
+  </div>
+  
+  <div id="edit_form">
+  <form id="edit" onsubmit="return false;">
+  </form>
+  </div>
+  
+  <div id="login">
+    <span id="msg"></span>
+	<span id="logged_in">
+      Zalogowano jako: <span id="username"></span>.
+      <button onclick="logout()">Wyloguj się</button>
+      <!--<input type="hidden" name="type" value="logout">
+      {{ csrf_input }}-->
+	</span>
+	<span id="logged_out">
+	<form id="login" onsubmit="return false;">
+      Login: <input type="text" name="username">
+      Hasło: <input type="password" name="password">
+	</form>
+      <button onclick="login()">Login</button>
+      <!--<input type="hidden" name="type" value="login">
+      {{ csrf_input }}-->
+      <button onclick="$('#register_form_shadow').show();$('#register_form').show();">Zarejestruj się</button>
+	</span>
+  </div>
+  <header id="title">
+      Wybory prezydenckie 2000
+      <img id="loading" src="https://www.wallies.com/filebin/images/loading_apple.gif" />
+  </header>
+  <nav>
+    <form id="search" onsubmit="return false;">
+      Wyszukaj <select>
+        <option value="woj">województwo</option>
+        <option value="okrag">okręg</option>
+        <option value="gmina">gminę</option>
+        <option value="obwod">obwód</option>
+      </select> po nazwie:
+      <input type="text" name="q" value="">
+      <button onclick="search(null);">Szukaj</button>
+    </form>
+  </nav>
+  <section id="candidates_section">
+    <figure id="map">
+      <div id="map-pl">
+        <ul id="polska">
+          <li id="pl1"><a href="17">Dolnośląskie</a></li>
+          <li id="pl2"><a href="18">Kujawsko-pomorskie</a></li>
+          <li id="pl3"><a href="19">Lubelskie</a></li>
+          <li id="pl4"><a href="20">Lubuskie</a></li>
+          <li id="pl5"><a href="21">Łódzkie</a></li>
+          <li id="pl6"><a href="22">Małopolskie</a></li>
+          <li id="pl7"><a href="23">Mazowieckie</a></li>
+          <li id="pl8"><a href="24">Opolskie</a></li>
+          <li id="pl9"><a href="25">Podkarpackie</a></li>
+          <li id="pl10"><a href="26">Podlaskie</a></li>
+          <li id="pl11"><a href="27">Pomorskie</a></li>
+          <li id="pl12"><a href="28">Śląskie</a></li>
+          <li id="pl13"><a href="29">Świętokrzyskie</a></li>
+          <li id="pl14"><a href="30">Warmińsko-mazurskie</a></li>
+          <li id="pl15"><a href="31">Wielkopolskie</a></li>
+          <li id="pl16"><a href="32">Zachodniopomorskie</a></li>
+        </ul>
+      </div>
+    </figure>
+  <article id="candidates">
+    <table class="candidates">
+      <thead>
+      <tr>
+        <th>Nazwisko kandydata</th>
+        <th>Zdobyte głosy</th>
+        <th>Wynik (%)</th>
+      </tr>
+      </thead>
+      <tbody><!--
+      {% for c in candidates %}<tr>
+        <td>{{ c.name }}</td>
+        <td class="num">{{ c.votes }}</td>
+        <td><div><div style="width:{{ c.votes_percent }}; background-color:{{ c.color }};">{{ c.votes_percent }}</div></div></td>
+      </tr>{% endfor %}-->
+      </tbody>
+    </table>
+  </article>
+  </section>
+
+  <section id="data_section">
+    <table class="regions">
+      <thead>
+      <tr>
+        <th>Nazwa jednostki</th>
+        <th>Głosy ważne</th>
+        <!--{% for c in candidates %}<th class="thin">{{ c.name }}</th>{% endfor %}-->
+      </tr>
+      </thead>
+      <tbody><!--
+      {% for r in regions %}<tr>
+        <td>
+          {% if r.link %}
+            <a href="{{ r.link }}">{{ r.name }}</a>
+          {% else %}
+          {{ r.name }}
+          {% endif %}
+        </td>
+        <td class="num">{{ r.total }}</td>
+        {% for v in r.candidate_votes %}<td class="num thin">{{ v }}</td>{% endfor %}
+        <td class="bars">
+          {% for v in r.candidate_votes %}
+            {% if r.total != 0 -%}
+              {% set percents = ((v / r.total) * 100.0)|round(2) -%}
+            {% else -%}
+              {% set percents = (100.0 / r.candidate_votes|length)|round(2) -%}
+            {% endif -%}
+            <div class="cand_bar" style="width:{{ percents }}%; background-color:{{ ['black', 'red', 'green']|random }};"></div>
+          {% endfor %}
+        </td>
+        {% if request.user.is_authenticated() and can_edit %}
+          <td><a href="{{ r.edit_link }}">Edytuj</a></td>
+        {% endif %}
+      </tr>{% endfor %}-->
+      </tbody>
+    </table>
+  </section>
+</div>
+</body>
+</html>
